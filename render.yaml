@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: saher-ia-piloto
+    runtime: node
+    plan: free
+    repo: https://github.com/casalasa89/casalasa89.github.io
+    branch: saher-ia-piloto
+    rootDir: saher
+    buildCommand: npm test
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: HOST
+        value: 0.0.0.0
+      - key: ALLOWED_ORIGIN
+        value: https://casalasa89.github.io
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: PILOT_TOKEN
+        generateValue: true
