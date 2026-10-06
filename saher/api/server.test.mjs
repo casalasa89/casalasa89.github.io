@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
 import {createServer} from './server.mjs';
 test('Acceso, validación y llamada al proveedor sin divulgar clave', async()=>{
  let calls=0;
@@ -22,4 +23,11 @@ test('Acceso, validación y llamada al proveedor sin divulgar clave', async()=>{
 test('Sin configuración no simula una respuesta de IA',async()=>{
  const server=createServer({env:{},fetcher:()=>{throw Error('No debe llamar')}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  try{const r=await fetch(`http://127.0.0.1:${server.address().port}/api/chat`,{method:'POST'});assert.equal(r.status,503);}finally{await new Promise(r=>server.close(r));}
+});
+test('La interfaz se sirve desde la ubicación configurada y un archivo ausente no detiene el servidor',async()=>{
+ const htmlPath=existsSync(new URL('../index.html',import.meta.url))?'../index.html':'../dist/index.html';
+ const server=createServer({env:{HTML_PATH:htmlPath}});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ try{const r=await fetch(`http://127.0.0.1:${server.address().port}/`);assert.equal(r.status,200);assert.match(await r.text(),/SOLUCIONA/);}finally{await new Promise(r=>server.close(r));}
+ const absent=createServer({env:{HTML_PATH:'./archivo-inexistente.html'}});await new Promise(r=>absent.listen(0,'127.0.0.1',r));
+ try{const r=await fetch(`http://127.0.0.1:${absent.address().port}/`);assert.equal(r.status,503);const health=await fetch(`http://127.0.0.1:${absent.address().port}/api/health`);assert.equal(health.status,200);}finally{await new Promise(r=>absent.close(r));}
 });
