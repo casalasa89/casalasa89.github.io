@@ -19,7 +19,10 @@ export function createServer({env=process.env, fetcher=fetch}={}) {
     if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Headers':'Content-Type, Authorization','Access-Control-Allow-Methods':'POST, GET, OPTIONS'});return res.end();}
     if(req.url==='/api/health')return send(200,{configured:!!(env.OPENAI_API_KEY && env.OPENAI_MODEL && env.PILOT_TOKEN)});
     if(req.method==='GET' && ['/', '/saher/', '/saher/index.html'].includes(req.url)){
-      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});return res.end(await readFile(fileURLToPath(new URL('../dist/index.html',import.meta.url))));
+      try {
+        const html=await readFile(fileURLToPath(new URL(env.HTML_PATH || '../index.html',import.meta.url)));
+        res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});return res.end(html);
+      }catch{return send(503,{error:'La interfaz no está disponible'});}
     }
     if(req.url!=='/api/chat')return send(404,{error:'Ruta no encontrada'});
     if(req.method!=='POST')return send(405,{error:'Método no permitido'});
